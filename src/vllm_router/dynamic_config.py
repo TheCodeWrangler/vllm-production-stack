@@ -133,15 +133,15 @@ class DynamicConfigWatcher(metaclass=SingletonMeta):
         if config.service_discovery == "static":
             reconfigure_service_discovery(
                 ServiceDiscoveryType.STATIC,
-                urls=parse_static_urls(config.static_backends),
-                models=parse_static_model_names(config.static_models),
+                static_backends=parse_static_urls(config.static_backends),
+                static_models=parse_static_model_names(config.static_models),
             )
         elif config.service_discovery == "k8s":
             reconfigure_service_discovery(
                 ServiceDiscoveryType.K8S,
-                namespace=config.k8s_namespace,
-                port=config.k8s_port,
-                label_selector=config.k8s_label_selector,
+                k8s_namespace=config.k8s_namespace,
+                k8s_port=config.k8s_port,
+                k8s_label_selector=config.k8s_label_selector,
             )
         else:
             raise ValueError(

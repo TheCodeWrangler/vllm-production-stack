@@ -130,26 +130,24 @@ def initialize_all(app: FastAPI, args):
     if args.service_discovery == "static":
         initialize_service_discovery(
             ServiceDiscoveryType.STATIC,
-            urls=parse_static_urls(args.static_backends),
-            models=parse_static_model_names(args.static_models),
-            aliases=(
-                parse_static_aliases(args.static_aliases)
-                if args.static_aliases
-                else None
-            ),
+            static_backends=parse_static_urls(args.static_backends),
+            static_models=parse_static_model_names(args.static_models),
         )
     elif args.service_discovery == "k8s":
         initialize_service_discovery(
             ServiceDiscoveryType.K8S,
-            namespace=args.k8s_namespace,
-            port=args.k8s_port,
-            label_selector=args.k8s_label_selector,
+            k8s_namespace=args.k8s_namespace,
+            k8s_port=args.k8s_port,
+            k8s_label_selector=args.k8s_label_selector,
+            httpx_client_wrapper=app.state.httpx_client_wrapper,
         )
     else:
         raise ValueError(f"Invalid service discovery type: {args.service_discovery}")
 
     # Initialize singletons via custom functions.
-    initialize_engine_stats_scraper(args.engine_stats_interval)
+    initialize_engine_stats_scraper(
+        args.engine_stats_interval, httpx_client_wrapper=app.state.httpx_client_wrapper
+    )
     initialize_request_stats_monitor(args.request_stats_window)
 
     if args.enable_batch_api:
@@ -247,6 +245,8 @@ app.include_router(files_router)
 app.include_router(batches_router)
 app.include_router(metrics_router)
 app.state.httpx_client_wrapper = HTTPXClientWrapper()
+# Start the wrapper immediately so it can be used during initialization
+app.state.httpx_client_wrapper.start()
 app.state.semantic_cache_available = semantic_cache_available
 
 
